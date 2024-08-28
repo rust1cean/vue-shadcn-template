@@ -19,7 +19,9 @@ export default {
         },
         extend: {
             spacing: {
-                'horizontal-root': '60vw'
+                'horizontal-root': '64vw',
+                'horizontal-padding': '2vw',
+                'vertical-padding': '5vh'
             },
             colors: {
                 border: 'hsl(var(--border))',

@@ -1,10 +1,9 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, watchEffect } from 'vue'
+import { useWindowSize } from '@vueuse/core'
 
 const props = withDefaults(
     defineProps<{
-        width?: number
-        height?: number
         particlesCount?: number
         borders?: () => {
             left: number
@@ -19,9 +18,7 @@ const props = withDefaults(
         maxParticleVelocity?: () => { x: number; y: number }
     }>(),
     {
-        width: document.documentElement.clientWidth,
-        height: document.documentElement.clientHeight,
-        particlesCount: 200,
+        particlesCount: 500,
         borders: () => ({
             left: 0,
             top: 0,
@@ -30,13 +27,13 @@ const props = withDefaults(
         }),
         particleRadius:
             (document.documentElement.clientWidth + document.documentElement.clientHeight) /
-            4 /
+            10 /
             1000,
         particleFillColor: 'gray',
         particleStrokeColor: 'transparent',
         minParticleVelocity: () => ({
             x: document.documentElement.clientWidth / 1_000,
-            y: 0
+            y: document.documentElement.clientHeight / 1_000
         }),
         maxParticleVelocity: () => ({
             x: document.documentElement.clientWidth / 250,
@@ -48,12 +45,18 @@ const props = withDefaults(
 const canvas = ref<HTMLCanvasElement | null>(null)
 
 onMounted(() => {
+    const windowSize = useWindowSize({ includeScrollbar: false })
     const ctx = canvas.value?.getContext('2d')
 
-    if (canvas.value && ctx) {
-        canvas.value.width = props.width
-        canvas.value.height = props.height
+    // Resize canvas whenever window size changes
+    watchEffect(() => {
+        if (canvas.value != null) {
+            canvas.value.width = windowSize.width.value
+            canvas.value.height = windowSize.height.value
+        }
+    })
 
+    if (ctx) {
         class Particle {
             ctx: CanvasRenderingContext2D
             position: { x: number; y: number }
@@ -67,8 +70,8 @@ onMounted(() => {
                 ctx: CanvasRenderingContext2D,
                 {
                     position = {
-                        x: props.width / 2,
-                        y: props.height / 2
+                        x: windowSize.width.value / 2,
+                        y: windowSize.height.value / 2
                     },
                     velocity = randomVelocity(),
                     radius = props.particleRadius,
@@ -90,11 +93,11 @@ onMounted(() => {
         let particles: Particle[] = []
 
         const animation = () => {
-            ctx.clearRect(0, 0, props.width, props.height)
+            ctx.clearRect(0, 0, windowSize.width.value, windowSize.height.value)
 
             // Add particles when needed
             const notEnoughParticles = props.particlesCount - particles.length
-            if (notEnoughParticles > 0 && Math.random() > 0.7) particles.push(new Particle(ctx))
+            if (notEnoughParticles > 0) particles.push(new Particle(ctx))
 
             particles = particles.filter(lifecycle)
 
@@ -169,5 +172,5 @@ onMounted(() => {
 </script>
 
 <template>
-    <canvas class="absolute z-[-1]" ref="canvas"></canvas>
+    <canvas class="absolute top-0 left-0 z-[-1]" ref="canvas"></canvas>
 </template>

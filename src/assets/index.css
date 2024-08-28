@@ -39,11 +39,15 @@
     }
 
     #app {
-        @apply h-screen flex flex-col items-center justify-center;
+        @apply min-h-screen flex flex-col items-center justify-center;
     }
 
     h1 {
         @apply text-7xl font-semibold;
+    }
+
+    h3 {
+        @apply text-3xl font-semibold;
     }
 
     h4 {
